@@ -8,619 +8,184 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #f0ede8;
-    --panel: #fff;
-    --border: #d8d4ce;
-    --ink: #111;
-    --muted: #888;
-  }
-
-  body {
-    background: var(--bg);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    gap: 0;
-  }
+  :root { --bg:#f0ede8; --panel:#fff; --border:#d8d4ce; --ink:#111; --muted:#888; }
+  body { background:var(--bg); font-family:'Syne',sans-serif; min-height:100vh; display:flex; gap:0; }
 
   /* ── LEFT PANEL ── */
   .input-panel {
-    width: 380px;
-    min-width: 380px;
-    background: var(--panel);
-    border-right: 2px solid var(--ink);
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    transition: width .35s cubic-bezier(.4,0,.2,1), min-width .35s cubic-bezier(.4,0,.2,1);
-    overflow: hidden;
-    z-index: 10;
+    width:380px; min-width:380px; background:var(--panel);
+    border-right:2px solid var(--ink); display:flex; flex-direction:column;
+    height:100vh; position:sticky; top:0;
+    transition:width .35s cubic-bezier(.4,0,.2,1),min-width .35s cubic-bezier(.4,0,.2,1);
+    overflow:hidden; z-index:10;
   }
-
-  .input-panel.collapsed {
-    width: 48px;
-    min-width: 48px;
-  }
-
+  .input-panel.collapsed { width:48px; min-width:48px; }
   .panel-header {
-    padding: 16px 14px;
-    border-bottom: 1.5px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    min-height: 58px;
+    padding:16px 14px; border-bottom:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0; min-height:58px;
   }
-
-  .panel-header-text {
-    overflow: hidden;
-    white-space: nowrap;
-    transition: opacity .2s;
-  }
-
-  .input-panel.collapsed .panel-header-text {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .panel-title {
-    font-family: 'Anton', sans-serif;
-    font-size: 20px;
-    letter-spacing: .04em;
-    color: var(--ink);
-    line-height: 1;
-  }
-
-  .panel-sub {
-    font-family: 'Courier Prime', monospace;
-    font-size: 9px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-top: 3px;
-  }
-
+  .panel-header-text { overflow:hidden; white-space:nowrap; transition:opacity .2s; }
+  .input-panel.collapsed .panel-header-text { opacity:0; pointer-events:none; }
+  .panel-title { font-family:'Anton',sans-serif; font-size:20px; letter-spacing:.04em; color:var(--ink); line-height:1; }
+  .panel-sub { font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:3px; }
   .toggle-btn {
-    width: 28px;
-    height: 28px;
-    border: 1.5px solid var(--ink);
-    background: transparent;
-    border-radius: 3px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: background .15s, color .15s;
-    color: var(--ink);
-    font-size: 12px;
-    line-height: 1;
+    width:28px; height:28px; border:1.5px solid var(--ink); background:transparent;
+    border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; transition:background .15s,color .15s; color:var(--ink); font-size:12px; line-height:1;
   }
-
-  .toggle-btn:hover { background: var(--ink); color: #fff; }
-
+  .toggle-btn:hover { background:var(--ink); color:#fff; }
   .collapsed-label {
-    display: none;
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    font-family: 'Anton', sans-serif;
-    font-size: 13px;
-    letter-spacing: .08em;
-    color: var(--ink);
-    padding: 16px 0;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity .2s .15s;
+    display:none; writing-mode:vertical-rl; text-orientation:mixed; transform:rotate(180deg);
+    font-family:'Anton',sans-serif; font-size:13px; letter-spacing:.08em; color:var(--ink);
+    padding:16px 0; flex:1; align-items:center; justify-content:center; cursor:pointer;
+    opacity:0; transition:opacity .2s .15s;
   }
-
-  .input-panel.collapsed .collapsed-label {
-    display: flex;
-    opacity: 1;
-  }
-
+  .input-panel.collapsed .collapsed-label { display:flex; opacity:1; }
   .panel-body {
-    padding: 16px 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    opacity: 1;
-    transition: opacity .15s;
+    padding:16px 22px; display:flex; flex-direction:column; gap:14px;
+    flex:1; overflow-y:auto; overflow-x:hidden; opacity:1; transition:opacity .15s;
   }
-
-  .input-panel.collapsed .panel-body {
-    opacity: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
-
-  .field-group { display: flex; flex-direction: column; gap: 5px; }
-
-  label {
-    font-family: 'Courier Prime', monospace;
-    font-size: 9.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--ink);
-    font-weight: 700;
-  }
-
+  .input-panel.collapsed .panel-body { opacity:0; pointer-events:none; overflow:hidden; }
+  .field-group { display:flex; flex-direction:column; gap:5px; }
+  label { font-family:'Courier Prime',monospace; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink); font-weight:700; }
   input[type="text"] {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1.5px solid var(--border);
-    border-radius: 3px;
-    font-family: 'Syne', sans-serif;
-    font-size: 13px;
-    color: var(--ink);
-    background: #faf9f7;
-    outline: none;
-    transition: border-color .15s;
+    width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:3px;
+    font-family:'Syne',sans-serif; font-size:13px; color:var(--ink);
+    background:#faf9f7; outline:none; transition:border-color .15s;
   }
-
-  input[type="text"]:focus { border-color: var(--ink); }
-
+  input[type="text"]:focus { border-color:var(--ink); }
   textarea {
-    width: 100%;
-    padding: 9px 11px;
-    border: 1.5px solid var(--border);
-    border-radius: 3px;
-    font-family: 'Courier Prime', monospace;
-    font-size: 12px;
-    color: var(--ink);
-    background: #faf9f7;
-    outline: none;
-    resize: vertical;
-    min-height: 180px;
-    line-height: 1.6;
-    transition: border-color .15s;
+    width:100%; padding:9px 11px; border:1.5px solid var(--border); border-radius:3px;
+    font-family:'Courier Prime',monospace; font-size:12px; color:var(--ink);
+    background:#faf9f7; outline:none; resize:vertical; min-height:160px; line-height:1.6;
+    transition:border-color .15s;
   }
+  textarea:focus { border-color:var(--ink); }
+  .field-hint { font-family:'Courier Prime',monospace; font-size:9px; color:var(--muted); line-height:1.5; }
 
-  textarea:focus { border-color: var(--ink); }
-
-  .field-hint {
-    font-family: 'Courier Prime', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    line-height: 1.5;
+  /* music link row */
+  .music-link-row { display:flex; gap:6px; }
+  .music-link-row input { flex:1; }
+  .fetch-btn {
+    padding:0 12px; border:1.5px solid var(--ink); background:transparent;
+    border-radius:3px; font-family:'Courier Prime',monospace; font-size:10px;
+    letter-spacing:.08em; color:var(--ink); cursor:pointer; white-space:nowrap;
+    transition:background .15s,color .15s; flex-shrink:0;
   }
+  .fetch-btn:hover { background:var(--ink); color:#fff; }
+  .fetch-btn:disabled { opacity:.4; cursor:default; pointer-events:none; }
+  .fetch-status {
+    font-family:'Courier Prime',monospace; font-size:9px; line-height:1.5;
+    display:none; padding:5px 8px; border-radius:3px;
+  }
+  .fetch-status.ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; display:block; }
+  .fetch-status.err { background:#fff4f0; border:1px solid #f5c4b3; color:#c2410c; display:block; }
+  .fetch-status.loading { background:#f8fafc; border:1px solid var(--border); color:var(--muted); display:block; }
 
   .cover-upload-area {
-    border: 1.5px dashed var(--border);
-    border-radius: 3px;
-    padding: 14px;
-    text-align: center;
-    cursor: pointer;
-    background: #faf9f7;
-    transition: border-color .15s, background .15s;
-    position: relative;
+    border:1.5px dashed var(--border); border-radius:3px; padding:14px;
+    text-align:center; cursor:pointer; background:#faf9f7;
+    transition:border-color .15s,background .15s; position:relative;
   }
-
-  .cover-upload-area:hover { border-color: var(--ink); background: #f5f3ef; }
-
-  .cover-upload-area.has-image {
-    border-style: solid;
-    border-color: var(--ink);
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .cover-upload-area input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .upload-placeholder { pointer-events: none; }
-  .upload-icon { font-size: 20px; margin-bottom: 4px; color: var(--muted); }
-  .upload-text { font-family: 'Courier Prime', monospace; font-size: 10px; color: var(--muted); letter-spacing: .06em; }
-
-  .cover-preview {
-    width: 100%;
-    height: 110px;
-    object-fit: cover;
-    object-position: center 15%;
-    display: none;
-  }
-
-  .cover-upload-area.has-image .cover-preview { display: block; }
-  .cover-upload-area.has-image .upload-placeholder { display: none; }
-
+  .cover-upload-area:hover { border-color:var(--ink); background:#f5f3ef; }
+  .cover-upload-area.has-image { border-style:solid; border-color:var(--ink); padding:0; overflow:hidden; }
+  .cover-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .upload-placeholder { pointer-events:none; }
+  .upload-icon { font-size:20px; margin-bottom:4px; color:var(--muted); }
+  .upload-text { font-family:'Courier Prime',monospace; font-size:10px; color:var(--muted); letter-spacing:.06em; }
+  .cover-preview { width:100%; height:110px; object-fit:cover; object-position:center 15%; display:none; }
+  .cover-upload-area.has-image .cover-preview { display:block; }
+  .cover-upload-area.has-image .upload-placeholder { display:none; }
   .remove-cover-btn {
-    position: absolute;
-    top: 6px; right: 6px;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: none;
-    border-radius: 2px;
-    font-size: 10px;
-    padding: 2px 6px;
-    cursor: pointer;
-    font-family: 'Courier Prime', monospace;
-    display: none;
-    z-index: 2;
+    position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.6); color:#fff;
+    border:none; border-radius:2px; font-size:10px; padding:2px 6px; cursor:pointer;
+    font-family:'Courier Prime',monospace; display:none; z-index:2;
   }
-
-  .cover-upload-area.has-image .remove-cover-btn { display: block; }
+  .cover-upload-area.has-image .remove-cover-btn { display:block; }
 
   .gen-btn {
-    background: var(--ink);
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    font-family: 'Anton', sans-serif;
-    font-size: 16px;
-    letter-spacing: .06em;
-    cursor: pointer;
-    border-radius: 3px;
-    width: 100%;
-    transition: opacity .15s;
-    margin-top: 2px;
+    background:var(--ink); color:#fff; border:none; padding:12px 20px;
+    font-family:'Anton',sans-serif; font-size:16px; letter-spacing:.06em;
+    cursor:pointer; border-radius:3px; width:100%; transition:opacity .15s; margin-top:2px;
   }
-
-  .gen-btn:hover { opacity: .82; }
-
+  .gen-btn:hover { opacity:.82; }
   .error-msg {
-    font-family: 'Courier Prime', monospace;
-    font-size: 10px;
-    color: #c2410c;
-    padding: 8px 10px;
-    background: #fff4f0;
-    border: 1px solid #f5c4b3;
-    border-radius: 3px;
-    display: none;
+    font-family:'Courier Prime',monospace; font-size:10px; color:#c2410c;
+    padding:8px 10px; background:#fff4f0; border:1px solid #f5c4b3;
+    border-radius:3px; display:none;
   }
 
   /* ── RIGHT PANEL ── */
-  .preview-panel {
-    flex: 1;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 32px 24px;
-    overflow-y: auto;
-  }
-
-  .preview-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .preview-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    min-height: 400px;
-    text-align: center;
-  }
-
-  .preview-empty-icon { font-size: 48px; opacity: .2; }
-
-  .preview-empty-text {
-    font-family: 'Courier Prime', monospace;
-    font-size: 11px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: #bbb;
-  }
-
-  .download-row {
-    display: none;
-    gap: 10px;
-    margin-top: 18px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .download-row.visible { display: flex; }
-
+  .preview-panel { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:32px 24px; overflow-y:auto; }
+  .preview-inner { display:flex; flex-direction:column; align-items:center; width:100%; }
+  .preview-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:400px; text-align:center; }
+  .preview-empty-icon { font-size:48px; opacity:.2; }
+  .preview-empty-text { font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#bbb; }
+  .download-row { display:none; gap:10px; margin-top:18px; flex-wrap:wrap; justify-content:center; }
+  .download-row.visible { display:flex; }
   .dl-btn {
-    font-family: 'Courier Prime', monospace;
-    font-size: 10px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 9px 18px;
-    background: transparent;
-    border: 1.5px solid var(--ink);
-    border-radius: 3px;
-    cursor: pointer;
-    color: var(--ink);
-    transition: background .15s, color .15s, opacity .15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    font-family:'Courier Prime',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    padding:9px 18px; background:transparent; border:1.5px solid var(--ink); border-radius:3px;
+    cursor:pointer; color:var(--ink); transition:background .15s,color .15s,opacity .15s;
+    display:inline-flex; align-items:center; gap:6px;
   }
+  .dl-btn:hover { background:var(--ink); color:#fff; }
+  .dl-btn.primary { background:var(--ink); color:#fff; }
+  .dl-btn.primary:hover { opacity:.82; }
+  .dl-btn:disabled { opacity:.4; cursor:default; pointer-events:none; }
+  .spinner { width:11px; height:11px; border:1.5px solid currentColor; border-top-color:transparent; border-radius:50%; animation:spin .6s linear infinite; display:none; flex-shrink:0; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 
-  .dl-btn:hover { background: var(--ink); color: #fff; }
-
-  .dl-btn.primary { background: var(--ink); color: #fff; }
-  .dl-btn.primary:hover { opacity: .82; }
-  .dl-btn:disabled { opacity: .4; cursor: default; pointer-events: none; }
-
-  .spinner {
-    width: 11px;
-    height: 11px;
-    border: 1.5px solid currentColor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    display: none;
-    flex-shrink: 0;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ════════════════════
-     CARD STYLES
-     ════════════════════ */
-  .card {
-    width: 540px;
-    background: #fff;
-    border: 3px solid #111;
-    overflow: hidden;
-    font-family: 'Syne', sans-serif;
-  }
-
-  .hero {
-    position: relative;
-    width: 100%;
-    height: 148px;
-    overflow: hidden;
-    border-bottom: 2.5px solid #111;
-  }
-
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 18%;
-    filter: brightness(0.45);
-  }
-
-  .hero-bg-plain { position: absolute; inset: 0; background: #000; }
-
-  .hero-content {
-    position: relative;
-    z-index: 1;
-    height: 100%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 12px 16px;
-  }
-
-  .pills-row { display: flex; gap: 5px; margin-bottom: 5px; flex-wrap: wrap; }
-
-  .pill {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8.5px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border: 1px solid #4ade80;
-    color: #4ade80;
-    border-radius: 2px;
-    font-weight: 700;
-  }
-
-  .c-album-title {
-    font-family: 'Anton', sans-serif;
-    font-size: 56px;
-    line-height: 1;
-    letter-spacing: .04em;
-    color: #fff;
-  }
-
-  .c-artist-name {
-    font-weight: 800;
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    margin-top: 3px;
-  }
-
-  .hero-grade-block { text-align: right; flex-shrink: 0; margin-left: 12px; }
-
-  .hero-grade-label {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-    display: block;
-  }
-
-  .hero-grade {
-    font-family: 'Anton', sans-serif;
-    font-size: 64px;
-    line-height: 1;
-    letter-spacing: .02em;
-  }
-
-  .hero-score {
-    font-family: 'Courier Prime', monospace;
-    font-size: 9px;
-    color: rgba(255,255,255,0.55);
-    display: block;
-    text-align: right;
-  }
-
-  .top3-section { border-bottom: 2.5px solid #111; padding: 9px 14px; background: #fff; }
-
-  .section-hd {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8.5px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: #111;
-    margin-bottom: 7px;
-  }
-
-  .top3-row { display: flex; gap: 6px; }
-
-  .top3-card {
-    flex: 1;
-    background: #f9f8f6;
-    border: 1px solid #ddd;
-    border-top: 2px solid #111;
-    padding: 7px 9px;
-  }
-
-  .top3-card:nth-child(1) { border-top-color: #c8a400; }
-  .top3-card:nth-child(2) { border-top-color: #888; }
-  .top3-card:nth-child(3) { border-top-color: #b87333; }
-
-  .podium-tag { font-family: 'Courier Prime', monospace; font-size: 7.5px; color: #111; margin-bottom: 2px; }
-  .top3-card:nth-child(1) .podium-tag { color: #c8a400; }
-  .top3-card:nth-child(2) .podium-tag { color: #888; }
-  .top3-card:nth-child(3) .podium-tag { color: #b87333; }
-
-  .top3-name { font-size: 10.5px; font-weight: 700; color: #111; line-height: 1.25; margin-bottom: 1px; }
-  .top3-grade { font-family: 'Anton', sans-serif; font-size: 22px; line-height: 1; }
-
-  .disc-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    background: #f5f3ef;
-    border-bottom: 1px solid #ddd;
-    border-top: 2.5px solid #111;
-  }
-
-  .disc-pill {
-    font-family: 'Anton', sans-serif;
-    font-size: 8.5px;
-    letter-spacing: .06em;
-    padding: 2px 8px 1px;
-    border-radius: 2px;
-    color: #fff;
-  }
-  .disc-pill.lyfe { background: #2c7a2c; }
-  .disc-pill.love { background: #c0306a; }
-
-  .disc-name-text {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: #111;
-  }
-
-  .track-grid { display: grid; grid-template-columns: 1fr 1fr; background: #fff; }
-
-  .track-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 14px;
-    border-bottom: 1px solid #f0ede8;
-    border-right: 1px solid #f0ede8;
-  }
-
-  .track-item.even-col { border-right: none; }
-  .track-item.filler { border-right: none; background: #fff; }
-
-  .t-num {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8.5px;
-    color: #111;
-    min-width: 14px;
-    flex-shrink: 0;
-    text-align: right;
-  }
-
-  .t-info { flex: 1; min-width: 0; }
-
-  .t-name {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: #111;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.25;
-  }
-
-  .t-feat-small {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8px;
-    color: #111;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .t-grade {
-    font-family: 'Anton', sans-serif;
-    font-size: 13px;
-    letter-spacing: .02em;
-    flex-shrink: 0;
-    line-height: 1;
-    width: 24px;
-    text-align: right;
-  }
-
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 14px;
-    border-top: 2.5px solid #111;
-    background: #f5f3ef;
-  }
-
-  .footer-left {
-    font-family: 'Courier Prime', monospace;
-    font-size: 8px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: #111;
-  }
-
-  .legend { display: flex; gap: 9px; }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    font-family: 'Courier Prime', monospace;
-    font-size: 8px;
-    color: #111;
-  }
-
-  .legend-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
-  .gA  { color: #16a34a; }
-  .gBp { color: #7c3aed; }
-  .gB  { color: #6d28d9; }
-  .gBm { color: #5b21b6; }
-  .gCp { color: #ea580c; }
-  .gC  { color: #c2410c; }
-  .gDp { color: #dc2626; }
-  .gD  { color: #dc2626; }
-  .gDm { color: #b91c1c; }
-  .gF  { color: #b91c1c; }
+  /* ════ CARD STYLES ════ */
+  .card { width:540px; background:#fff; border:3px solid #111; overflow:hidden; font-family:'Syne',sans-serif; }
+  .hero { position:relative; width:100%; height:148px; overflow:hidden; border-bottom:2.5px solid #111; }
+  .hero-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 18%; filter:brightness(0.45); }
+  .hero-bg-plain { position:absolute; inset:0; background:#000; }
+  .hero-content { position:relative; z-index:1; height:100%; display:flex; align-items:flex-end; justify-content:space-between; padding:12px 16px; }
+  .pills-row { display:flex; gap:5px; margin-bottom:5px; flex-wrap:wrap; }
+  .pill { font-family:'Courier Prime',monospace; font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border:1px solid #4ade80; color:#4ade80; border-radius:2px; font-weight:700; }
+  .c-album-title { font-family:'Anton',sans-serif; font-size:56px; line-height:1; letter-spacing:.04em; color:#fff; }
+  .c-artist-name { font-weight:800; font-size:11px; color:rgba(255,255,255,0.85); letter-spacing:.08em; text-transform:uppercase; margin-top:3px; }
+  .hero-grade-block { text-align:right; flex-shrink:0; margin-left:12px; }
+  .hero-grade-label { font-family:'Courier Prime',monospace; font-size:8px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,0.55); display:block; }
+  .hero-grade { font-family:'Anton',sans-serif; font-size:64px; line-height:1; letter-spacing:.02em; }
+  .hero-score { font-family:'Courier Prime',monospace; font-size:9px; color:rgba(255,255,255,0.55); display:block; text-align:right; }
+  .top3-section { border-bottom:2.5px solid #111; padding:9px 14px; background:#fff; }
+  .section-hd { font-family:'Courier Prime',monospace; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:#111; margin-bottom:7px; }
+  .top3-row { display:flex; gap:6px; }
+  .top3-card { flex:1; background:#f9f8f6; border:1px solid #ddd; border-top:2px solid #111; padding:7px 9px; }
+  .top3-card:nth-child(1) { border-top-color:#c8a400; }
+  .top3-card:nth-child(2) { border-top-color:#888; }
+  .top3-card:nth-child(3) { border-top-color:#b87333; }
+  .podium-tag { font-family:'Courier Prime',monospace; font-size:7.5px; color:#111; margin-bottom:2px; }
+  .top3-card:nth-child(1) .podium-tag { color:#c8a400; }
+  .top3-card:nth-child(2) .podium-tag { color:#888; }
+  .top3-card:nth-child(3) .podium-tag { color:#b87333; }
+  .top3-name { font-size:10.5px; font-weight:700; color:#111; line-height:1.25; margin-bottom:1px; }
+  .top3-grade { font-family:'Anton',sans-serif; font-size:22px; line-height:1; }
+  .disc-header { display:flex; align-items:center; gap:8px; padding:6px 14px; background:#f5f3ef; border-bottom:1px solid #ddd; border-top:2.5px solid #111; }
+  .disc-pill { font-family:'Anton',sans-serif; font-size:8.5px; letter-spacing:.06em; padding:2px 8px 1px; border-radius:2px; color:#fff; }
+  .disc-pill.lyfe { background:#2c7a2c; }
+  .disc-pill.love { background:#c0306a; }
+  .disc-name-text { font-family:'Courier Prime',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:#111; }
+  .track-grid { display:grid; grid-template-columns:1fr 1fr; background:#fff; }
+  .track-item { display:flex; align-items:center; gap:7px; padding:5px 14px; border-bottom:1px solid #f0ede8; border-right:1px solid #f0ede8; }
+  .track-item.even-col { border-right:none; }
+  .track-item.filler { border-right:none; background:#fff; }
+  .t-num { font-family:'Courier Prime',monospace; font-size:8.5px; color:#111; min-width:14px; flex-shrink:0; text-align:right; }
+  .t-info { flex:1; min-width:0; }
+  .t-name { font-size:10.5px; font-weight:600; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.25; }
+  .t-feat-small { font-family:'Courier Prime',monospace; font-size:8px; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .t-grade { font-family:'Anton',sans-serif; font-size:13px; letter-spacing:.02em; flex-shrink:0; line-height:1; width:24px; text-align:right; }
+  .card-footer { display:flex; justify-content:space-between; align-items:center; padding:8px 14px; border-top:2.5px solid #111; background:#f5f3ef; }
+  .footer-left { font-family:'Courier Prime',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:#111; }
+  .legend { display:flex; gap:9px; }
+  .legend-item { display:flex; align-items:center; gap:3px; font-family:'Courier Prime',monospace; font-size:8px; color:#111; }
+  .legend-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .gA  { color:#16a34a; } .gBp { color:#7c3aed; } .gB  { color:#6d28d9; } .gBm { color:#5b21b6; }
+  .gCp { color:#ea580c; } .gC  { color:#c2410c; } .gDp { color:#dc2626; } .gD  { color:#dc2626; }
+  .gDm { color:#b91c1c; } .gF  { color:#b91c1c; }
 </style>
 </head>
 <body>
@@ -630,12 +195,17 @@
   <div class="panel-header">
     <div class="panel-header-text">
       <div class="panel-title">ALBUM RATER</div>
-      <div class="panel-sub">Instagram Story Generator</div>
+      <div class="panel-sub">Generate Album Rating Visual</div>
     </div>
     <button class="toggle-btn" id="toggleBtn" onclick="togglePanel()" title="Collapse panel">&#9664;</button>
   </div>
   <div class="collapsed-label" onclick="togglePanel()">ALBUM RATER</div>
   <div class="panel-body">
+
+    <div class="field-group">
+      <label>Your Name</label>
+      <input type="text" id="reviewerName" placeholder="e.g. Kyle">
+    </div>
     <div class="field-group">
       <label>Artist</label>
       <input type="text" id="artist" placeholder="e.g. Kendrick Lamar">
@@ -648,6 +218,16 @@
       <label>Release Year</label>
       <input type="text" id="year" placeholder="e.g. 2017">
     </div>
+
+    <div class="field-group">
+      <label>Album Link <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(optional — fetches track names)</span></label>
+      <div class="music-link-row">
+        <input type="text" id="musicLink" placeholder="Spotify, Apple Music, or YouTube Music URL">
+        <button class="fetch-btn" id="fetchBtn" onclick="fetchTracks()">Fetch &#8599;</button>
+      </div>
+      <div class="fetch-status" id="fetchStatus"></div>
+    </div>
+
     <div class="field-group">
       <label>Album Cover <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(optional)</span></label>
       <div class="cover-upload-area" id="coverUploadArea">
@@ -660,11 +240,13 @@
         <button class="remove-cover-btn" onclick="removeCover(event)">&#10005; Remove</button>
       </div>
     </div>
+
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="Paste one per line:&#10;1 - Track Name - A&#10;2 - Track Name - B+&#10;3 - Track Name - B-&#10;&#10;OR just numbers:&#10;1 - A&#10;2 - B+&#10;3 - C"></textarea>
-      <div class="field-hint">Format: <code>1 - Track Name - Grade</code> or <code>1 - Grade</code><br>Grades: S, A+, A, A&#8722;, B+, B, B&#8722;, C+, C, C&#8722;, D+, D, D&#8722;, F</div>
+      <textarea id="ratings" placeholder="One per line — track name is optional:&#10;&#10;Track Name - A+&#10;Track Name - B&#10;&#10;Or just grades (auto-numbered):&#10;A+&#10;B&#10;C+&#10;&#10;Or with manual numbers:&#10;1 - Track Name - A+&#10;2 - B"></textarea>
+      <div class="field-hint">Each line = one track, auto-numbered top to bottom.<br>Grades: S, A+, A, A&#8722;, B+, B, B&#8722;, C+, C, C&#8722;, D+, D, D&#8722;, F</div>
     </div>
+
     <div class="error-msg" id="errorMsg"></div>
     <button class="gen-btn" onclick="generate()">GENERATE &#8599;</button>
   </div>
@@ -690,31 +272,23 @@
 
 <script>
 const GRADE_ORDER = ['S','A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F'];
-const GRADE_SCORE = {
-  'S':100,'A+':97,'A':93,'A-':90,
-  'B+':87,'B':83,'B-':80,
-  'C+':77,'C':73,'C-':70,
-  'D+':67,'D':63,'D-':60,'F':30
-};
+const GRADE_SCORE = {'S':100,'A+':97,'A':93,'A-':90,'B+':87,'B':83,'B-':80,'C+':77,'C':73,'C-':70,'D+':67,'D':63,'D-':60,'F':30};
 
 let coverDataUrl = null;
 let panelOpen = true;
+let fetchedTrackNames = []; // populated when user hits Fetch
 
+/* ── PANEL TOGGLE ── */
 function togglePanel() {
   panelOpen = !panelOpen;
   const panel = document.getElementById('inputPanel');
   const btn   = document.getElementById('toggleBtn');
-  if (panelOpen) {
-    panel.classList.remove('collapsed');
-    btn.innerHTML = '&#9664;';
-    btn.title = 'Collapse panel';
-  } else {
-    panel.classList.add('collapsed');
-    btn.innerHTML = '&#9654;';
-    btn.title = 'Expand panel';
-  }
+  panel.classList.toggle('collapsed', !panelOpen);
+  btn.innerHTML = panelOpen ? '&#9664;' : '&#9654;';
+  btn.title     = panelOpen ? 'Collapse panel' : 'Expand panel';
 }
 
+/* ── COVER UPLOAD ── */
 function handleCoverUpload(input) {
   if (!input.files || !input.files[0]) return;
   const reader = new FileReader();
@@ -734,17 +308,81 @@ function removeCover(e) {
   document.getElementById('coverFile').value = '';
 }
 
+/* ── FETCH TRACK NAMES via Anthropic API ── */
+async function fetchTracks() {
+  const link   = document.getElementById('musicLink').value.trim();
+  const artist = document.getElementById('artist').value.trim();
+  const album  = document.getElementById('album').value.trim();
+  const status = document.getElementById('fetchStatus');
+  const btn    = document.getElementById('fetchBtn');
+
+  if (!link && !artist && !album) {
+    setStatus('err', 'Enter an album link, or fill in Artist + Album Name first.');
+    return;
+  }
+
+  btn.disabled = true;
+  setStatus('loading', 'Fetching tracklist…');
+
+  const prompt = link
+    ? `You are a music database. Given this streaming link: "${link}", return the tracklist as JSON.
+Respond ONLY with: {"tracks":["Track 1","Track 2",...]}
+No markdown, no explanation.`
+    : `You are a music database. Return the full tracklist for the album "${album}" by "${artist}" as JSON.
+Respond ONLY with: {"tracks":["Track 1","Track 2",...]}
+No markdown, no explanation.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const textBlock = data.content?.find(b => b.type === 'text');
+    if (!textBlock) throw new Error('No text response');
+
+    const clean = textBlock.text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    if (!parsed.tracks || !parsed.tracks.length) throw new Error('No tracks found');
+
+    fetchedTrackNames = parsed.tracks;
+    setStatus('ok', `&#10003; Found ${fetchedTrackNames.length} tracks — grades will be matched automatically.`);
+
+    // If ratings textarea is empty or only grades, hint the user
+    const ratingsVal = document.getElementById('ratings').value.trim();
+    if (!ratingsVal) {
+      document.getElementById('ratings').placeholder =
+        fetchedTrackNames.slice(0,3).map((t,i) => `${i+1} - A`).join('\n') + '\n...';
+    }
+
+  } catch(err) {
+    setStatus('err', 'Could not fetch tracklist. You can still enter track names manually.');
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function setStatus(type, msg) {
+  const el = document.getElementById('fetchStatus');
+  el.className = 'fetch-status ' + type;
+  el.innerHTML = msg;
+}
+
+/* ── GRADE HELPERS ── */
 function normalizeGrade(raw) {
   return raw.trim().toUpperCase().replace(/[−–—]/g, '-').replace(/\s/g, '');
 }
 
 function gradeClass(g) {
-  const map = {
-    'S':'gA','A+':'gA','A':'gA','A-':'gA',
-    'B+':'gBp','B':'gB','B-':'gBm',
-    'C+':'gCp','C':'gC','C-':'gC',
-    'D+':'gDp','D':'gD','D-':'gDm','F':'gF'
-  };
+  const map = {'S':'gA','A+':'gA','A':'gA','A-':'gA','B+':'gBp','B':'gB','B-':'gBm','C+':'gCp','C':'gC','C-':'gC','D+':'gDp','D':'gD','D-':'gDm','F':'gF'};
   return map[g] || 'gC';
 }
 
@@ -759,36 +397,76 @@ function avgGrade(grades) {
   return { grade: best, score: Math.round(avg) };
 }
 
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.textContent = msg; el.style.display = 'block';
-}
-function clearError() { document.getElementById('errorMsg').style.display = 'none'; }
+function showError(msg) { const el = document.getElementById('errorMsg'); el.textContent = msg; el.style.display = 'block'; }
+function clearError()   { document.getElementById('errorMsg').style.display = 'none'; }
+function getMonthYear() { return new Date().toLocaleString('en-US', { month:'short', year:'numeric' }); }
 
-function getMonthYear() {
-  return new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' });
-}
-
+/* ── PARSE RATINGS ──
+   Supports all formats, auto-numbering top to bottom:
+   "Track Name - A+"       → name + grade
+   "A+"                    → grade only (no name)
+   "1 - Track Name - A+"   → legacy numbered format
+   "1 - A+"                → legacy numbered, no name
+*/
 function parseRatings(raw) {
+  const GRADE_RE = /^([SABCDFsabcdf][+\-−–]?)$/;
   const lines = raw.trim().split('\n').map(l => l.trim()).filter(Boolean);
   const tracks = [];
-  for (const line of lines) {
-    const matchA = line.match(/^(\d+)\s*[-–—]\s*(.+?)\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
-    if (matchA) { tracks.push({ num: parseInt(matchA[1]), name: matchA[2].trim(), grade: normalizeGrade(matchA[3]) }); continue; }
-    const matchB = line.match(/^(\d+)\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
-    if (matchB) { tracks.push({ num: parseInt(matchB[1]), name: null, grade: normalizeGrade(matchB[2]) }); }
+
+  lines.forEach((line, idx) => {
+    const num = idx + 1; // always auto-number by position
+
+    // Legacy format: "1 - Track Name - Grade" or "1 - Grade"
+    const legacyFull = line.match(/^\d+\s*[-–—]\s*(.+?)\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
+    if (legacyFull) {
+      tracks.push({ num, name: legacyFull[1].trim(), grade: normalizeGrade(legacyFull[2]) });
+      return;
+    }
+    const legacyGradeOnly = line.match(/^\d+\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
+    if (legacyGradeOnly) {
+      tracks.push({ num, name: null, grade: normalizeGrade(legacyGradeOnly[1]) });
+      return;
+    }
+
+    // "Track Name - Grade"
+    const withName = line.match(/^(.+?)\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
+    if (withName) {
+      tracks.push({ num, name: withName[1].trim(), grade: normalizeGrade(withName[2]) });
+      return;
+    }
+
+    // Just a grade: "A+", "B-", etc.
+    const gradeOnly = line.match(/^([SABCDFsabcdf][+\-−–]?)$/i);
+    if (gradeOnly) {
+      tracks.push({ num, name: null, grade: normalizeGrade(gradeOnly[1]) });
+      return;
+    }
+  });
+
+  // Merge fetched track names into nameless entries (by position)
+  if (fetchedTrackNames.length) {
+    tracks.forEach((t, i) => {
+      if (!t.name && fetchedTrackNames[i]) {
+        t.name = fetchedTrackNames[i];
+      }
+    });
   }
-  return tracks.sort((a,b) => a.num - b.num);
+
+  return tracks;
 }
 
-function buildCard(artist, album, year, tracks, coverSrc) {
+/* ── BUILD CARD ── */
+function buildCard(artist, album, year, reviewerName, tracks, coverSrc) {
   const { grade: overallGrade, score: overallScore } = avgGrade(tracks.map(t => t.grade));
   const overallClass = gradeClass(overallGrade);
   const top3 = [...tracks].sort((a,b) => (GRADE_SCORE[b.grade]||0) - (GRADE_SCORE[a.grade]||0)).slice(0,3);
+
   const heroBg = coverSrc
     ? `<img class="hero-bg" src="${coverSrc}" alt="cover">`
     : `<div class="hero-bg-plain"></div>`;
+
   const pillsHtml = `<div class="pills-row">${year ? `<span class="pill">${year}</span>` : ''}<span class="pill">Hip-Hop</span></div>`;
+
   const podiumLabels = ['&#9733; No. 1','&#9733; No. 2','&#9733; No. 3'];
   const top3Html = top3.map((t,i) => `
     <div class="top3-card">
@@ -800,20 +478,21 @@ function buildCard(artist, album, year, tracks, coverSrc) {
   const isDouble = tracks.length >= 15;
   const mid   = Math.ceil(tracks.length / 2);
   const disc1 = isDouble ? tracks.slice(0, mid) : tracks;
-  const disc2 = isDouble ? tracks.slice(mid) : [];
+  const disc2 = isDouble ? tracks.slice(mid)    : [];
 
   function renderGrid(list) {
     let html = '<div class="track-grid">';
     list.forEach((t, idx) => {
       const colClass = idx % 2 === 1 ? 'even-col' : '';
-      const nameHtml = t.name
-        ? `<div class="t-name">${t.name}</div>`
-        : `<div class="t-name" style="color:#999;font-style:italic">Track ${t.num}</div>`;
-      html += `<div class="track-item ${colClass}">
-        <span class="t-num">${String(t.num).padStart(2,'0')}</span>
-        <div class="t-info">${nameHtml}</div>
-        <span class="t-grade ${gradeClass(t.grade)}">${t.grade}</span>
-      </div>`;
+      const hasName  = !!t.name;
+
+      // If no name: hide the number column, show "Track N" styled as the name
+      const numHtml  = hasName  ? `<span class="t-num">${String(t.num).padStart(2,'0')}</span>` : '';
+      const nameHtml = hasName
+        ? `<div class="t-info"><div class="t-name">${t.name}</div></div>`
+        : `<div class="t-info"><div class="t-name" style="color:#aaa;font-style:italic">Track ${t.num}</div></div>`;
+
+      html += `<div class="track-item ${colClass}">${numHtml}${nameHtml}<span class="t-grade ${gradeClass(t.grade)}">${t.grade}</span></div>`;
     });
     if (list.length % 2 !== 0) html += `<div class="track-item filler"></div>`;
     html += '</div>';
@@ -823,6 +502,8 @@ function buildCard(artist, album, year, tracks, coverSrc) {
   const tracksHtml = isDouble
     ? `<div class="disc-header"><span class="disc-pill lyfe">Disc 1</span><span class="disc-name-text">Side A</span></div>${renderGrid(disc1)}<div class="disc-header"><span class="disc-pill love">Disc 2</span><span class="disc-name-text">Side B</span></div>${renderGrid(disc2)}`
     : renderGrid(disc1);
+
+  const nameLabel = reviewerName ? reviewerName : 'Anonymous';
 
   return `<div class="card" id="outputCard">
     <div class="hero">
@@ -846,7 +527,7 @@ function buildCard(artist, album, year, tracks, coverSrc) {
     </div>
     ${tracksHtml}
     <div class="card-footer">
-      <span class="footer-left">Personal rating &middot; Totally Off &middot; ${getMonthYear()}</span>
+      <span class="footer-left">Personal rating &middot; ${nameLabel} &middot; ${getMonthYear()}</span>
       <div class="legend">
         <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>A</div>
         <div class="legend-item"><div class="legend-dot" style="background:#6d28d9"></div>B</div>
@@ -857,12 +538,14 @@ function buildCard(artist, album, year, tracks, coverSrc) {
   </div>`;
 }
 
+/* ── GENERATE ── */
 function generate() {
   clearError();
-  const artist = document.getElementById('artist').value.trim();
-  const album  = document.getElementById('album').value.trim();
-  const year   = document.getElementById('year').value.trim();
-  const raw    = document.getElementById('ratings').value;
+  const artist       = document.getElementById('artist').value.trim();
+  const album        = document.getElementById('album').value.trim();
+  const year         = document.getElementById('year').value.trim();
+  const reviewerName = document.getElementById('reviewerName').value.trim();
+  const raw          = document.getElementById('ratings').value;
 
   if (!artist)     { showError('Please enter an artist name.'); return; }
   if (!album)      { showError('Please enter an album name.'); return; }
@@ -870,52 +553,41 @@ function generate() {
 
   const tracks = parseRatings(raw);
   if (!tracks.length) {
-    showError('No valid ratings found. Use format: 1 - A+ or 1 - Track Name - B');
+    showError('No valid ratings found. Try: "Track Name - A+" or just "A+" per line.');
     return;
   }
 
   const container = document.getElementById('cardContainer');
-  container.innerHTML = buildCard(artist, album, year, tracks, coverDataUrl);
+  container.innerHTML = buildCard(artist, album, year, reviewerName, tracks, coverDataUrl);
   container.style.display = 'block';
   document.getElementById('previewEmpty').style.display = 'none';
   document.getElementById('downloadRow').classList.add('visible');
 
-  // Auto-collapse the panel so the card is front and centre
   if (panelOpen) togglePanel();
 }
 
+/* ── DOWNLOAD PNG ── */
 async function downloadPNG() {
   const card = document.getElementById('outputCard');
   if (!card) return;
-
   const btn     = document.getElementById('pngBtn');
   const spinner = document.getElementById('pngSpinner');
   const label   = btn.lastChild;
   btn.disabled  = true;
   spinner.style.display = 'inline-block';
   label.textContent = ' Rendering…';
-
   try {
     await document.fonts.ready;
-    const canvas = await html2canvas(card, {
-      scale: 2,            // 1080px wide — perfect for Instagram
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-    });
-
+    const canvas = await html2canvas(card, { scale:2, useCORS:true, allowTaint:true, backgroundColor:'#ffffff', logging:false });
     const artist   = document.getElementById('artist').value.trim() || 'album';
     const album    = document.getElementById('album').value.trim()  || 'rating';
     const filename = `${artist.toLowerCase().replace(/\s+/g,'-')}-${album.toLowerCase().replace(/[^a-z0-9]/g,'-')}-rating.png`;
-
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
+      const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
-
   } catch(err) {
     alert('PNG export failed — try the HTML download instead.');
     console.error(err);
@@ -926,6 +598,7 @@ async function downloadPNG() {
   }
 }
 
+/* ── DOWNLOAD HTML ── */
 function downloadHTML() {
   const card   = document.getElementById('outputCard');
   if (!card) return;
@@ -933,15 +606,8 @@ function downloadHTML() {
   const links  = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.outerHTML).join('\n');
   const artist = document.getElementById('artist').value.trim() || 'album';
   const album  = document.getElementById('album').value.trim()  || 'rating';
-
-  const html = `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<title>${artist} — ${album}</title>
-${links}${styles}
-<style>body{background:#e8e4de;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:'Syne',sans-serif;}</style>
-</head><body>${card.outerHTML}</body></html>`;
-
-  const blob = new Blob([html], { type: 'text/html' });
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>${artist} — ${album}</title>${links}${styles}<style>body{background:#e8e4de;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:'Syne',sans-serif;}</style></head><body>${card.outerHTML}</body></html>`;
+  const blob = new Blob([html], { type:'text/html' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
