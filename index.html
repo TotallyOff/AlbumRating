@@ -146,13 +146,11 @@
   .top3-name { font-size:10.5px; font-weight:700; color:#111; line-height:1.25; margin-bottom:1px; }
   .top3-grade { font-family:'Anton',sans-serif; font-size:22px; line-height:1; }
   .disc-header { display:flex; align-items:center; gap:8px; padding:6px 14px; background:#f5f3ef; border-bottom:1px solid #ddd; border-top:2.5px solid #111; }
-  .disc-pill { font-family:'Anton',sans-serif; font-size:8.5px; letter-spacing:.06em; padding:2px 8px 1px; border-radius:2px; color:#fff; }
-  .disc-pill.lyfe { background:#2c7a2c; }
-  .disc-pill.love { background:#c0306a; }
+  .disc-pill { font-family:'Anton',sans-serif; font-size:8.5px; letter-spacing:.06em; padding:2px 8px 1px; border-radius:2px; color:#fff; background:#2c7a2c; }
   .disc-name-text { font-family:'Courier Prime',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:#111; }
-  .track-grid { display:grid; grid-template-columns:1fr 1fr; background:#fff; }
+  .track-grid { display:grid; grid-template-columns:1fr 1fr; grid-auto-flow:column; background:#fff; }
   .track-item { display:flex; align-items:center; gap:5px; padding:5px 10px; border-bottom:1px solid #f0ede8; border-right:1px solid #f0ede8; overflow:hidden; }
-  .track-item.even-col { border-right:none; }
+  .track-item.right-col { border-right:none; }
   .track-item.filler { border-right:none; background:#fff; }
   .t-num { font-family:'Courier Prime',monospace; font-size:8.5px; color:#111; min-width:12px; flex-shrink:0; text-align:right; }
   .t-info { flex:1; min-width:0; overflow:hidden; }
@@ -175,8 +173,8 @@
 <div class="input-panel" id="inputPanel">
   <div class="panel-header">
     <div class="panel-header-text">
-      <div class="panel-title">ALBUM RATER</div>
-      <div class="panel-sub">Generate Album Rating Visual</div>
+      <div class="panel-title">Album Review Visual</div>
+      <div class="panel-sub">by Totally Off</div>
     </div>
     <button class="toggle-btn" id="toggleBtn" onclick="togglePanel()" title="Collapse panel">&#9664;</button>
   </div>
@@ -185,19 +183,19 @@
 
     <div class="field-group">
       <label>Your Name</label>
-      <input type="text" id="reviewerName" placeholder="e.g. Kyle">
+      <input type="text" id="reviewerName" placeholder="e.g. John Pork">
     </div>
     <div class="field-group">
       <label>Artist</label>
-      <input type="text" id="artist" placeholder="e.g. Kendrick Lamar">
+      <input type="text" id="artist" placeholder="e.g. Totally Off">
     </div>
     <div class="field-group">
       <label>Album Name</label>
-      <input type="text" id="album" placeholder="e.g. DAMN.">
+      <input type="text" id="album" placeholder="e.g. Cycles">
     </div>
     <div class="field-group">
       <label>Release Year</label>
-      <input type="text" id="year" placeholder="e.g. 2017">
+      <input type="text" id="year" placeholder="e.g. 2099">
     </div>
 
     <div class="field-group">
@@ -215,8 +213,8 @@
 
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="One per line — track name is optional:&#10;&#10;Track Name - A+&#10;Track Name - B&#10;&#10;Or just grades (auto-numbered):&#10;A+&#10;B&#10;C+&#10;&#10;Or with manual numbers:&#10;1 - Track Name - A+&#10;2 - B"></textarea>
-      <div class="field-hint">Each line = one track, auto-numbered top to bottom.<br>Grades: S, A+, A, A&#8722;, B+, B, B&#8722;, C+, C, C&#8722;, D+, D, D&#8722;, F</div>
+      <textarea id="ratings" placeholder="One track per line - Tip: Use AI to format a clean tracklist, then add your rating&#10;&#10;Track Name - A+ &#10A+ - Track Name&#10;&#10;Or just grades (but no track name will show)&#10;A+&#10;B&#10;C+&#10;&#10"></textarea>
+      <div class="field-hint">Grading System: S tier is amazing, A is a saved song, B is good but not good enough to save, C is mid, D is bad, F is badddd.</div>
     </div>
 
     <div class="error-msg" id="errorMsg"></div>
@@ -305,6 +303,7 @@ function getMonthYear() { return new Date().toLocaleString('en-US', { month:'sho
 /* ── PARSE RATINGS ──
    Supports all formats, auto-numbering top to bottom:
    "Track Name - A+"       → name + grade
+   "A+ - Track Name"       → grade first + name
    "A+"                    → grade only (no name)
    "1 - Track Name - A+"   → legacy numbered format
    "1 - A+"                → legacy numbered, no name
@@ -326,6 +325,13 @@ function parseRatings(raw) {
     const legacyGradeOnly = line.match(/^\d+\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
     if (legacyGradeOnly) {
       tracks.push({ num, name: null, grade: normalizeGrade(legacyGradeOnly[1]) });
+      return;
+    }
+
+    // Grade-first: "A+ - Track Name"
+    const gradeFirst = line.match(/^([SABCDFsabcdf][+\-−–]?)\s*[-–—]\s*(.+)$/i);
+    if (gradeFirst) {
+      tracks.push({ num, name: gradeFirst[2].trim(), grade: normalizeGrade(gradeFirst[1]) });
       return;
     }
 
@@ -367,33 +373,35 @@ function buildCard(artist, album, year, reviewerName, tracks, coverSrc) {
       <div class="top3-grade ${gradeClass(t.grade)}">${t.grade}</div>
     </div>`).join('');
 
-  const isDouble = tracks.length >= 15;
-  const mid   = Math.ceil(tracks.length / 2);
-  const disc1 = isDouble ? tracks.slice(0, mid) : tracks;
-  const disc2 = isDouble ? tracks.slice(mid)    : [];
-
   function renderGrid(list) {
-    let html = '<div class="track-grid">';
-    list.forEach((t, idx) => {
-      const colClass = idx % 2 === 1 ? 'even-col' : '';
-      const hasName  = !!t.name;
+    const mid = Math.ceil(list.length / 2);
+    const left  = list.slice(0, mid);
+    const right = list.slice(mid);
 
-      // If no name: hide the number column, show "Track N" styled as the name
-      const numHtml  = hasName  ? `<span class="t-num">${String(t.num).padStart(2,'0')}</span>` : '';
+    function trackHtml(t, colClass) {
+      const hasName = !!t.name;
+      const numHtml  = hasName ? `<span class="t-num">${String(t.num).padStart(2,'0')}</span>` : '';
       const nameHtml = hasName
         ? `<div class="t-info"><div class="t-name">${t.name}</div></div>`
         : `<div class="t-info"><div class="t-name" style="color:#aaa;font-style:italic">Track ${t.num}</div></div>`;
+      return `<div class="track-item ${colClass}">${numHtml}${nameHtml}<span class="t-grade ${gradeClass(t.grade)}">${t.grade}</span></div>`;
+    }
 
-      html += `<div class="track-item ${colClass}">${numHtml}${nameHtml}<span class="t-grade ${gradeClass(t.grade)}">${t.grade}</span></div>`;
-    });
-    if (list.length % 2 !== 0) html += `<div class="track-item filler"></div>`;
+    // Interleave: left[0], right[0], left[1], right[1]... so CSS column flow fills left then right
+    let html = `<div class="track-grid" style="grid-template-rows:repeat(${mid}, auto);">`;
+    for (let i = 0; i < mid; i++) {
+      html += trackHtml(left[i], '');
+      if (right[i]) {
+        html += trackHtml(right[i], 'right-col');
+      } else {
+        html += `<div class="track-item filler right-col"></div>`;
+      }
+    }
     html += '</div>';
     return html;
   }
 
-  const tracksHtml = isDouble
-    ? `<div class="disc-header"><span class="disc-pill lyfe">Disc 1</span><span class="disc-name-text">Side A</span></div>${renderGrid(disc1)}<div class="disc-header"><span class="disc-pill love">Disc 2</span><span class="disc-name-text">Side B</span></div>${renderGrid(disc2)}`
-    : renderGrid(disc1);
+  const tracksHtml = `<div class="disc-header"><span class="disc-pill lyfe">Tracklist Ratings</span></div>${renderGrid(tracks)}`;
 
   const nameLabel = reviewerName ? reviewerName : 'Anonymous';
 
