@@ -64,25 +64,6 @@
   textarea:focus { border-color:var(--ink); }
   .field-hint { font-family:'Courier Prime',monospace; font-size:9px; color:var(--muted); line-height:1.5; }
 
-  /* music link row */
-  .music-link-row { display:flex; gap:6px; }
-  .music-link-row input { flex:1; }
-  .fetch-btn {
-    padding:0 12px; border:1.5px solid var(--ink); background:transparent;
-    border-radius:3px; font-family:'Courier Prime',monospace; font-size:10px;
-    letter-spacing:.08em; color:var(--ink); cursor:pointer; white-space:nowrap;
-    transition:background .15s,color .15s; flex-shrink:0;
-  }
-  .fetch-btn:hover { background:var(--ink); color:#fff; }
-  .fetch-btn:disabled { opacity:.4; cursor:default; pointer-events:none; }
-  .fetch-status {
-    font-family:'Courier Prime',monospace; font-size:9px; line-height:1.5;
-    display:none; padding:5px 8px; border-radius:3px;
-  }
-  .fetch-status.ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; display:block; }
-  .fetch-status.err { background:#fff4f0; border:1px solid #f5c4b3; color:#c2410c; display:block; }
-  .fetch-status.loading { background:#f8fafc; border:1px solid var(--border); color:var(--muted); display:block; }
-
   .cover-upload-area {
     border:1.5px dashed var(--border); border-radius:3px; padding:14px;
     text-align:center; cursor:pointer; background:#faf9f7;
@@ -220,15 +201,6 @@
     </div>
 
     <div class="field-group">
-      <label>Album Link <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(optional — fetches track names)</span></label>
-      <div class="music-link-row">
-        <input type="text" id="musicLink" placeholder="Spotify, Apple Music, or YouTube Music URL">
-        <button class="fetch-btn" id="fetchBtn" onclick="fetchTracks()">Fetch &#8599;</button>
-      </div>
-      <div class="fetch-status" id="fetchStatus"></div>
-    </div>
-
-    <div class="field-group">
       <label>Album Cover <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(optional)</span></label>
       <div class="cover-upload-area" id="coverUploadArea">
         <input type="file" id="coverFile" accept="image/*" onchange="handleCoverUpload(this)">
@@ -276,8 +248,6 @@ const GRADE_SCORE = {'S':100,'A+':97,'A':93,'A-':90,'B+':87,'B':83,'B-':80,'C+':
 
 let coverDataUrl = null;
 let panelOpen = true;
-let fetchedTrackNames = []; // populated when user hits Fetch
-
 /* ── PANEL TOGGLE ── */
 function togglePanel() {
   panelOpen = !panelOpen;
@@ -306,74 +276,6 @@ function removeCover(e) {
   document.getElementById('coverPreview').src = '';
   document.getElementById('coverUploadArea').classList.remove('has-image');
   document.getElementById('coverFile').value = '';
-}
-
-/* ── FETCH TRACK NAMES via Anthropic API ── */
-async function fetchTracks() {
-  const link   = document.getElementById('musicLink').value.trim();
-  const artist = document.getElementById('artist').value.trim();
-  const album  = document.getElementById('album').value.trim();
-  const status = document.getElementById('fetchStatus');
-  const btn    = document.getElementById('fetchBtn');
-
-  if (!link && !artist && !album) {
-    setStatus('err', 'Enter an album link, or fill in Artist + Album Name first.');
-    return;
-  }
-
-  btn.disabled = true;
-  setStatus('loading', 'Fetching tracklist…');
-
-  const prompt = link
-    ? `You are a music database. Given this streaming link: "${link}", return the tracklist as JSON.
-Respond ONLY with: {"tracks":["Track 1","Track 2",...]}
-No markdown, no explanation.`
-    : `You are a music database. Return the full tracklist for the album "${album}" by "${artist}" as JSON.
-Respond ONLY with: {"tracks":["Track 1","Track 2",...]}
-No markdown, no explanation.`;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 800,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await res.json();
-    const textBlock = data.content?.find(b => b.type === 'text');
-    if (!textBlock) throw new Error('No text response');
-
-    const clean = textBlock.text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-    if (!parsed.tracks || !parsed.tracks.length) throw new Error('No tracks found');
-
-    fetchedTrackNames = parsed.tracks;
-    setStatus('ok', `&#10003; Found ${fetchedTrackNames.length} tracks — grades will be matched automatically.`);
-
-    // If ratings textarea is empty or only grades, hint the user
-    const ratingsVal = document.getElementById('ratings').value.trim();
-    if (!ratingsVal) {
-      document.getElementById('ratings').placeholder =
-        fetchedTrackNames.slice(0,3).map((t,i) => `${i+1} - A`).join('\n') + '\n...';
-    }
-
-  } catch(err) {
-    setStatus('err', 'Could not fetch tracklist. You can still enter track names manually.');
-    console.error(err);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function setStatus(type, msg) {
-  const el = document.getElementById('fetchStatus');
-  el.className = 'fetch-status ' + type;
-  el.innerHTML = msg;
 }
 
 /* ── GRADE HELPERS ── */
@@ -442,15 +344,6 @@ function parseRatings(raw) {
       return;
     }
   });
-
-  // Merge fetched track names into nameless entries (by position)
-  if (fetchedTrackNames.length) {
-    tracks.forEach((t, i) => {
-      if (!t.name && fetchedTrackNames[i]) {
-        t.name = fetchedTrackNames[i];
-      }
-    });
-  }
 
   return tracks;
 }
