@@ -98,8 +98,11 @@
   }
 
   /* ── RIGHT PANEL ── */
-  .preview-panel { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:32px 24px; overflow-y:auto; }
-  .preview-inner { display:flex; flex-direction:column; align-items:center; width:100%; }
+  .preview-panel { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:32px 24px; overflow-y:auto; overflow-x:hidden; }
+  .preview-inner { display:flex; flex-direction:column; align-items:center; width:100%; max-width:100%; }
+  #previewImg { max-width:100%; height:auto; display:none; border:3px solid #111; }
+  .mobile-hint { display:none; font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.08em; color:var(--muted); text-align:center; margin-top:8px; }
+  @media (max-width:600px) { .mobile-hint { display:block; } }
   .preview-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:400px; text-align:center; }
   .preview-empty-icon { font-size:48px; opacity:.2; }
   .preview-empty-text { font-family:'Courier Prime',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#bbb; }
@@ -165,13 +168,6 @@
   .gA  { color:#16a34a; } .gBp { color:#7c3aed; } .gB  { color:#6d28d9; } .gBm { color:#5b21b6; }
   .gCp { color:#ea580c; } .gC  { color:#c2410c; } .gDp { color:#dc2626; } .gD  { color:#dc2626; }
   .gDm { color:#b91c1c; } .gF  { color:#b91c1c; }
-  .gpt-btn {
-    display:block; text-align:center; padding:7px 12px;
-    border:1.5px solid #10a37f; border-radius:3px; color:#10a37f;
-    font-family:'Courier Prime',monospace; font-size:9.5px; letter-spacing:.08em;
-    text-decoration:none; transition:background .15s,color .15s;
-  }
-  .gpt-btn:hover { background:#10a37f; color:#fff; }
 </style>
 </head>
 <body>
@@ -220,8 +216,7 @@
 
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="Track Name - A+&#10;Track Name - B&#10;&#10;Tip: Use AI to format a clean tracklist, then add your rating.&#10&#10Prompt for gpt: Format as tracklist: keep features, end each with ‘ -’."></textarea>
-      <a class="gpt-btn" href="https://chatgpt.com/" target="_blank" rel="noopener">Format tracklist with ChatGPT &#8599;</a>
+      <textarea id="ratings" placeholder="One track per line - Tip: Use AI to format a clean tracklist, then add your rating&#10;&#10;Track Name - A+&#10;Track Name - B&#10;&#10;Or just grades (no track name will show):&#10;A+&#10;B&#10;C+&#10;&#10"></textarea>
       <div class="field-hint">Grading System: S tier is amazing, A is a saved song, B is good but not good enough to save, C is mid, D is bad, F is badddd.</div>
     </div>
 
@@ -237,7 +232,9 @@
       <div class="preview-empty-icon">&#9835;</div>
       <div class="preview-empty-text">Fill in the form and hit generate</div>
     </div>
-    <div id="cardContainer" style="display:none;"></div>
+    <div id="cardContainer" style="position:absolute;left:-9999px;top:-9999px;"></div>
+    <img id="previewImg" alt="Album rating preview">
+    <p class="mobile-hint">Long press image to save to Photos</p>
     <div class="download-row" id="downloadRow">
       <button class="dl-btn primary" id="jpegBtn" onclick="downloadJPEG()">
         <span class="spinner" id="jpegSpinner"></span>
@@ -438,8 +435,10 @@ function buildCard(artist, album, year, reviewerName, tracks, coverSrc) {
   </div>`;
 }
 
+let renderedDataUrl = null;
+
 /* ── GENERATE ── */
-function generate() {
+async function generate() {
   clearError();
   const artist       = document.getElementById('artist').value.trim();
   const album        = document.getElementById('album').value.trim();
@@ -457,60 +456,55 @@ function generate() {
     return;
   }
 
+  // Build card offscreen
   const container = document.getElementById('cardContainer');
   container.innerHTML = buildCard(artist, album, year, reviewerName, tracks, coverDataUrl);
-  container.style.display = 'block';
-  document.getElementById('previewEmpty').style.display = 'none';
-  document.getElementById('downloadRow').classList.add('visible');
 
-  if (panelOpen) togglePanel();
-}
-
-/* ── DOWNLOAD JPEG (Instagram Story: 1080×1920) ── */
-async function downloadJPEG() {
-  const card = document.getElementById('outputCard');
-  if (!card) return;
   const btn     = document.getElementById('jpegBtn');
   const spinner = document.getElementById('jpegSpinner');
   const label   = btn.lastChild;
   btn.disabled  = true;
   spinner.style.display = 'inline-block';
   label.textContent = ' Rendering…';
+
   try {
     await document.fonts.ready;
-
-    // Pin the card to exactly 540px so html2canvas captures the full width
-    const cardW = 540;
+    const card = document.getElementById('outputCard');
     const cardCanvas = await html2canvas(card, {
-      scale: 2,
-      width: cardW,
-      height: card.scrollHeight,
-      windowWidth: cardW,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false
+      scale: 2, width: 540, height: card.scrollHeight,
+      windowWidth: 540, useCORS: true, allowTaint: true,
+      backgroundColor: '#ffffff', logging: false
     });
 
-    const artist   = document.getElementById('artist').value.trim() || 'album';
-    const album    = document.getElementById('album').value.trim()  || 'rating';
-    const filename = `${artist.toLowerCase().replace(/\s+/g,'-')}-${album.toLowerCase().replace(/[^a-z0-9]/g,'-')}-rating.jpg`;
+    renderedDataUrl = cardCanvas.toDataURL('image/jpeg', 0.95);
 
-    cardCanvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename; a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/jpeg', 0.95);
+    // Show as <img> — fits any screen width + enables long-press save on iOS
+    const previewImg = document.getElementById('previewImg');
+    previewImg.src = renderedDataUrl;
+    previewImg.style.display = 'block';
 
+    document.getElementById('previewEmpty').style.display = 'none';
+    document.getElementById('downloadRow').classList.add('visible');
+
+    if (panelOpen) togglePanel();
   } catch(err) {
-    alert('Export failed — please try again.');
+    showError('Render failed — please try again.');
     console.error(err);
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
     label.textContent = ' Save Image';
   }
+}
+
+/* ── DOWNLOAD JPEG ── */
+function downloadJPEG() {
+  if (!renderedDataUrl) return;
+  const artist   = document.getElementById('artist').value.trim() || 'album';
+  const album    = document.getElementById('album').value.trim()  || 'rating';
+  const filename = `${artist.toLowerCase().replace(/\s+/g,'-')}-${album.toLowerCase().replace(/[^a-z0-9]/g,'-')}-rating.jpg`;
+  const a = document.createElement('a');
+  a.href = renderedDataUrl; a.download = filename; a.click();
 }
 </script>
 </body>
