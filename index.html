@@ -100,7 +100,7 @@
   /* ── RIGHT PANEL ── */
   .preview-panel { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:32px 24px; overflow-y:auto; overflow-x:hidden; }
   .preview-inner { display:flex; flex-direction:column; align-items:center; width:100%; max-width:100%; }
-  #previewImg { max-width:100%; height:auto; display:none; border:3px solid #111; }
+  #previewImg { width:100%; max-width:540px; height:auto; display:none; border:3px solid #111; }
   .mobile-hint { display:none; font-family:'Courier Prime',monospace; font-size:9px; letter-spacing:.08em; color:var(--muted); text-align:center; margin-top:8px; }
   @media (max-width:600px) { .mobile-hint { display:block; } }
   .preview-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:400px; text-align:center; }
@@ -168,6 +168,13 @@
   .gA  { color:#16a34a; } .gBp { color:#7c3aed; } .gB  { color:#6d28d9; } .gBm { color:#5b21b6; }
   .gCp { color:#ea580c; } .gC  { color:#c2410c; } .gDp { color:#dc2626; } .gD  { color:#dc2626; }
   .gDm { color:#b91c1c; } .gF  { color:#b91c1c; }
+  .gpt-btn {
+    display:block; text-align:center; padding:7px 12px;
+    border:1.5px solid #10a37f; border-radius:3px; color:#10a37f;
+    font-family:'Courier Prime',monospace; font-size:9.5px; letter-spacing:.08em;
+    text-decoration:none; transition:background .15s,color .15s;
+  }
+  .gpt-btn:hover { background:#10a37f; color:#fff; }
 </style>
 </head>
 <body>
@@ -216,7 +223,8 @@
 
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="One track per line - Tip: Use AI to format a clean tracklist, then add your rating&#10;&#10;Track Name - A+&#10;Track Name - B&#10;&#10;Or just grades (no track name will show):&#10;A+&#10;B&#10;C+&#10;&#10"></textarea>
+      <textarea id="ratings" placeholder="Track Name - A+&#10;Track Name - B&#10;&#10;Tip: Use AI to format a clean tracklist, then add your rating.&#10&#10Prompt for gpt: Format as tracklist: keep features, end each with ‘ -’."></textarea>
+      <a class="gpt-btn" href="https://chatgpt.com/" target="_blank" rel="noopener">Format tracklist with ChatGPT &#8599;</a>
       <div class="field-hint">Grading System: S tier is amazing, A is a saved song, B is good but not good enough to save, C is mid, D is bad, F is badddd.</div>
     </div>
 
@@ -456,7 +464,6 @@ async function generate() {
     return;
   }
 
-  // Build card offscreen
   const container = document.getElementById('cardContainer');
   container.innerHTML = buildCard(artist, album, year, reviewerName, tracks, coverDataUrl);
 
@@ -478,7 +485,6 @@ async function generate() {
 
     renderedDataUrl = cardCanvas.toDataURL('image/jpeg', 0.95);
 
-    // Show as <img> — fits any screen width + enables long-press save on iOS
     const previewImg = document.getElementById('previewImg');
     previewImg.src = renderedDataUrl;
     previewImg.style.display = 'block';
