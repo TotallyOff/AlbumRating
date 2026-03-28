@@ -165,6 +165,13 @@
   .gA  { color:#16a34a; } .gBp { color:#7c3aed; } .gB  { color:#6d28d9; } .gBm { color:#5b21b6; }
   .gCp { color:#ea580c; } .gC  { color:#c2410c; } .gDp { color:#dc2626; } .gD  { color:#dc2626; }
   .gDm { color:#b91c1c; } .gF  { color:#b91c1c; }
+  .gpt-btn {
+    display:block; text-align:center; padding:7px 12px;
+    border:1.5px solid #10a37f; border-radius:3px; color:#10a37f;
+    font-family:'Courier Prime',monospace; font-size:9.5px; letter-spacing:.08em;
+    text-decoration:none; transition:background .15s,color .15s;
+  }
+  .gpt-btn:hover { background:#10a37f; color:#fff; }
 </style>
 </head>
 <body>
@@ -213,7 +220,8 @@
 
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="One track per line - Tip: Use AI to format a clean tracklist, then add your rating&#10;&#10;Track Name - A+ &#10A+ - Track Name&#10;&#10;Or just grades (but no track name will show)&#10;A+&#10;B&#10;C+&#10;&#10"></textarea>
+      <textarea id="ratings" placeholder="Track Name - A+&#10;Track Name - B&#10;&#10;Tip: Use AI to format a clean tracklist, then add your rating.&#10&#10Prompt for gpt: Format as tracklist: keep features, end each with ‘ -’."></textarea>
+      <a class="gpt-btn" href="https://chatgpt.com/" target="_blank" rel="noopener">Format tracklist with ChatGPT &#8599;</a>
       <div class="field-hint">Grading System: S tier is amazing, A is a saved song, B is good but not good enough to save, C is mid, D is bad, F is badddd.</div>
     </div>
 
@@ -303,7 +311,6 @@ function getMonthYear() { return new Date().toLocaleString('en-US', { month:'sho
 /* ── PARSE RATINGS ──
    Supports all formats, auto-numbering top to bottom:
    "Track Name - A+"       → name + grade
-   "A+ - Track Name"       → grade first + name
    "A+"                    → grade only (no name)
    "1 - Track Name - A+"   → legacy numbered format
    "1 - A+"                → legacy numbered, no name
@@ -325,13 +332,6 @@ function parseRatings(raw) {
     const legacyGradeOnly = line.match(/^\d+\s*[-–—]\s*([SABCDFsabcdf][+\-−–]?)$/);
     if (legacyGradeOnly) {
       tracks.push({ num, name: null, grade: normalizeGrade(legacyGradeOnly[1]) });
-      return;
-    }
-
-    // Grade-first: "A+ - Track Name"
-    const gradeFirst = line.match(/^([SABCDFsabcdf][+\-−–]?)\s*[-–—]\s*(.+)$/i);
-    if (gradeFirst) {
-      tracks.push({ num, name: gradeFirst[2].trim(), grade: normalizeGrade(gradeFirst[1]) });
       return;
     }
 
