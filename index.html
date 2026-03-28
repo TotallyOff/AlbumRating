@@ -213,8 +213,8 @@
       <div class="cover-upload-area" id="coverUploadArea">
         <input type="file" id="coverFile" accept="image/*" onchange="handleCoverUpload(this)">
         <div class="upload-placeholder">
-          <div class="upload-icon">&#128444;</div>
-          <div class="upload-text">Click to upload cover art<br>PNG, JPG supported</div>
+          <div class="upload-icon">&#11035;</div>
+          <div class="upload-text">Screenshot the album cover and upload it here. It makes the visual fancy.</div>
         </div>
         <img class="cover-preview" id="coverPreview" alt="cover">
         <button class="remove-cover-btn" onclick="removeCover(event)">&#10005; Remove</button>
@@ -223,7 +223,7 @@
 
     <div class="field-group">
       <label>Track Ratings</label>
-      <textarea id="ratings" placeholder="Track Name - A+&#10;Track Name - B&#10;&#10;Tip: Use AI to format a clean tracklist, then add your rating.&#10&#10Prompt for gpt: Format as tracklist: keep features, end each with ‘ -’."></textarea>
+      <textarea id="ratings" placeholder="Track Name - A+&#10;Track Name - B&#10;&#10;Tip: Use AI to format a clean tracklist, then add your rating next to each song.&#10&#10Prompt for gpt: Format as tracklist: keep features, end each with ‘ -’."></textarea>
       <a class="gpt-btn" href="https://chatgpt.com/" target="_blank" rel="noopener">Format tracklist with ChatGPT &#8599;</a>
       <div class="field-hint">Grading System: S tier is amazing, A is a saved song, B is good but not good enough to save, C is mid, D is bad, F is badddd.</div>
     </div>
